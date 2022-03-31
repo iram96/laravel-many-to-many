@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\Category;
+use App\Models\Tag;
 use Illuminate\Validation\Rule;
 
 class PostController extends Controller
@@ -18,7 +19,9 @@ class PostController extends Controller
     public function index()
     {
         $posts = Post::all();
-        return view( 'admin.posts.index', compact('posts'));
+        $categories = Category::all();
+        $tags = Tag::all();
+        return view( 'admin.posts.index', compact('posts', 'categories', 'tags'));
     }
 
     /**
@@ -31,7 +34,8 @@ class PostController extends Controller
         
         $post = new Post();
         $categories = Category::all();
-        return view('admin.posts.create', compact('post', 'categories'));
+        $tags = Tag::all();
+        return view('admin.posts.create', compact('post', 'categories', 'tags'));
     }
 
     /**
@@ -75,7 +79,9 @@ class PostController extends Controller
     public function show(Post $post)
     {
         
-        return view('admin.posts.show', compact('post'));
+        $categories = Category::all();
+        $tags = Tag::all();
+        return view('admin.posts.show', compact('post', 'categories', 'tags'));
     }
 
     /**
@@ -87,7 +93,8 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         $categories = Category::all();
-        return view('admin.posts.edit', compact('post', 'categories'));
+        $tags = Tag::all();
+        return view('admin.posts.edit', compact('post', 'categories', 'tags'));
     }
 
     /**
