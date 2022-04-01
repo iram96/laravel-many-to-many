@@ -17,8 +17,8 @@ class TagSeeder extends Seeder
             [ 'name' => 'tranding', 'class' => 'warning'],
             [ 'name' => 'risolved', 'class' => 'success'],
             [ 'name' => 'smartwork', 'class' => 'info'],
-            [ 'name' => 'new', 'class' => 'primay'],
-            [ 'name' => 'broken', 'class' => 'dark']
+            [ 'name' => 'new', 'class' => 'primary'],
+            [ 'name' => 'broken', 'class' => 'secondary']
            
         ];
 
