@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\Category;
 use App\Models\Tag;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 use Illuminate\Validation\Rule;
 
@@ -53,12 +54,13 @@ class PostController extends Controller
         $request->validate([
             'title' => 'required|string|unique:posts|max:30',
             'post_content' => 'string',
-            'image' => 'string|nullable',
+            'image' => 'nullable|image', // mimes:jpeg,png
             'slug' => 'string|unique:posts',
             'category_id' => 'nullable|exists:categories,id',
             'tags' => 'nullable|exists:tags,id'
+            
         ], [
-            'required' => 'Il campo :attribute è obbligatorio',
+            'required' => 'Post must have a :attribute',
             'title.max' => 'Il titolo super i :attribute caratteri',
             'unique' => "Il post $request->title è già presente"
         ]);
@@ -68,6 +70,10 @@ class PostController extends Controller
         
         $post = new Post();
 
+        if (array_key_exists('image', $data)){
+            $img_url = Storage::put('post_images', $data['image']);
+            $data['image'] = $img_url;
+        }
 
         $post->fill($data);
         $post->slug = Str::slug($post->title, '-');
@@ -121,7 +127,7 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => [ 'required', 'string', Rule::unique('posts')->ignore($post->id), 'max:30'],
-            'post_content' => 'text',
+            'post_content' => 'string',
             'image' => 'string|nullable',
             'tags' => 'nullable|exists:tags,id',
             'slug' => [ 'string', Rule::unique('posts')->ignore($post->id)]
