@@ -16,12 +16,12 @@
 
 @if ($post->exists)
     
-<form action="{{ route('admin.posts.update', $post)}}" method="POST">
+<form action="{{ route('admin.posts.update', $post)}}" method="POST" enctype="multipart/form-data">
     @method('PUT')
     
 @else
     
-<form action="{{ route('admin.posts.store')}}" method="POST">
+<form action="{{ route('admin.posts.store')}}" method="POST" enctype="multipart/form-data">
 @endif
 
     @csrf
@@ -56,12 +56,12 @@
             </div>
             <div class="mb-3 col-12">
                 <label for="image" class="form-label">URL Immagine</label>
-                <input type="text" class="form-control" id="image" name="image" placeholder="Type here...">
+                <input type="file" class="form-control-file" id="image" name="image" placeholder="Type here...">
             </div>
 
-            <div class="mb-3 col-12">
+            <div class="mb-3 col-12 ">
                 @foreach ($tags as $tag)
-                <div class="form-check form-check-inline badge rounded-pill bg-{{ $tag->class}}">
+                <div class="form-check form-check-inline badge rounded-pill bg-{{ $tag->class}} @error('tags') is-invalid @enderror">
                     <input class="form-check-input" type="checkbox" id="tag-{{ $tag->id}}" value="{{$tag->id}}" name="tags[]"
                     @if (in_array($tag->id , old('tags', $post_tags_ids ?? []) ))
                         checked
@@ -71,6 +71,11 @@
                   </div>
                     
                 @endforeach
+                @error('tags')
+                    <div class="invalid-feedback">
+                        {{$message}}
+                    </div>
+                @enderror
             </div>
         
             <button type="submit" class="btn btn-success">Save</button>
