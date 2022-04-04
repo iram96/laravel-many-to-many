@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\Category;
+use App\Models\Tag;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+
 use Illuminate\Validation\Rule;
 
 class PostController extends Controller
@@ -18,7 +22,9 @@ class PostController extends Controller
     public function index()
     {
         $posts = Post::all();
-        return view( 'admin.posts.index', compact('posts'));
+        $categories = Category::all();
+        $tags = Tag::all();
+        return view( 'admin.posts.index', compact('posts', 'categories', 'tags'));
     }
 
     /**
@@ -31,7 +37,8 @@ class PostController extends Controller
         
         $post = new Post();
         $categories = Category::all();
-        return view('admin.posts.create', compact('post', 'categories'));
+        $tags = Tag::all();
+        return view('admin.posts.create', compact('post', 'categories', 'tags'));
     }
 
     /**
@@ -42,14 +49,18 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        
+
         $request->validate([
             'title' => 'required|string|unique:posts|max:30',
             'post_content' => 'string',
-            'image' => 'string|nullable',
+            'image' => 'nullable|image', // mimes:jpeg,png
             'slug' => 'string|unique:posts',
-            'category_id' => 'nullable|exists:categories,id'
+            'category_id' => 'nullable|exists:categories,id',
+            'tags' => 'nullable|exists:tags,id'
+            
         ], [
-            'required' => 'Il campo :attribute è obbligatorio',
+            'required' => 'Post must have a :attribute',
             'title.max' => 'Il titolo super i :attribute caratteri',
             'unique' => "Il post $request->title è già presente"
         ]);
@@ -58,9 +69,19 @@ class PostController extends Controller
         $data = $request->all();
         
         $post = new Post();
+
+        if (array_key_exists('image', $data)){
+            $img_url = Storage::put('post_images', $data['image']);
+            $data['image'] = $img_url;
+        }
+
         $post->fill($data);
-        $post->slug = $post->title;
+        $post->slug = Str::slug($post->title, '-');
         $post->save();
+
+
+        if (array_key_exists('tags', $data)) $post->tags()->attach($data['tags']);
+        
 
         return redirect()->route('admin.posts.show', $post);
         
@@ -75,7 +96,10 @@ class PostController extends Controller
     public function show(Post $post)
     {
         
-        return view('admin.posts.show', compact('post'));
+        $categories = Category::all();
+        $tags = Tag::all();
+        
+        return view('admin.posts.show', compact('post', 'categories', 'tags'));
     }
 
     /**
@@ -87,7 +111,9 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         $categories = Category::all();
-        return view('admin.posts.edit', compact('post', 'categories'));
+        $tags = Tag::all();
+        $post_tags_ids = $post->tags->pluck('id')->toArray();
+        return view('admin.posts.edit', compact('post', 'categories', 'tags' , 'post_tags_ids'));
     }
 
     /**
@@ -101,8 +127,9 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => [ 'required', 'string', Rule::unique('posts')->ignore($post->id), 'max:30'],
-            'post_content' => 'text',
+            'post_content' => 'string',
             'image' => 'string|nullable',
+            'tags' => 'nullable|exists:tags,id',
             'slug' => [ 'string', Rule::unique('posts')->ignore($post->id)]
         ], [
             'required' => 'Il campo :attribute è obbligatorio',
@@ -112,9 +139,18 @@ class PostController extends Controller
 
         $data = $request->all();
 
-        
+
+
+        $post['slug'] = Str::slug($post->title, '-');
+
         $post->fill($data);
         $post->save();
+
+        // se non esistono tags in data allora detach, se no faccio sync con il post
+        if(!array_key_exists('tags', $data)) $post->tags()->detach(); 
+        else $post->tags()->sync($data['tags']);
+
+
         return redirect()->route('admin.posts.show', $post);
     }
 

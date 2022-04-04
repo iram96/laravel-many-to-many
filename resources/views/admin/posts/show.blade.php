@@ -4,6 +4,10 @@
 <div class="container">
     <h2>{{ $post->title}}</h2>
     <p>{{ $post->post_content}}</p>
+    @if ($post->image)
+        <img src="{{ asset("storage/$post->image") }}" alt="{{ $post->slug}}" width="50">
+        
+    @endif
     
     <a href="{{ route('admin.posts.index')}}" class="btn btn-dark">Back</a>
     <form action="{{ route('admin.posts.destroy', $post)}}" method="POST" class="delete-forms">
